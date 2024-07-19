@@ -1,21 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { Label } from "../ui/label";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Form, FormControl } from "@/components/ui/form"
+import { SelectItem } from "../ui/select";
+import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constants";
+import { registerPatient } from "@/lib/actions/patient.actions";
 import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
-import { useState } from "react";
-import { UserFormValidation } from "@/lib/validation";
-import { useRouter } from "next/navigation";
-import { createUser } from "@/lib/actions/patient.actions";
+import { PatientFormValidation } from "@/lib/validation";
 import { FormFieldType } from "./PatientForm";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Doctors, GenderOptions, IdentificationTypes } from "@/constants";
-import { Label } from "../ui/label";
-import { SelectItem } from "../ui/select";
-import Image from "next/image";
 import FileUploader from "../FileUploader";
 
 const RegisterForm = ({ user }: { user: User }) => {
@@ -24,17 +24,50 @@ const RegisterForm = ({ user }: { user: User }) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof UserFormValidation>>({
-    resolver: zodResolver(UserFormValidation),
+  const form = useForm<z.infer<typeof PatientFormValidation>>({
+    resolver: zodResolver(PatientFormValidation),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
+      ...PatientFormDefaultValues,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
     },
   })
 
-  const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
-    
+  const onSubmit = async (values: z.infer<typeof PatientFormValidation>) => {    
+    setIsLoading(true);
+
+    let formData;
+
+    if (values.identificationDocument && values.identificationDocument?.length > 0) {
+      const blobFile = new Blob(
+        [values.identificationDocument[0]], {
+        type: values.identificationDocument[0].type
+      });
+
+      formData = new FormData();
+      formData.append("blobFile", blobFile);
+      formData.append("fileName", values.identificationDocument[0].name);
+    }
+
+    try {
+      const patientData = {
+        ...values,
+        userId: user.$id,
+        birthDate: new Date(values.birthDate),
+        identificationDocument: formData,
+      };
+
+      // @ts-ignore
+      const patient = await registerPatient(patientData);
+      if (patient) {
+        router.push(`/patients/${user.$id}/new-appointment`);
+      }
+    } catch (error) {
+      console.log("Error in RegisterForm", error);
+    }
+
+    setIsLoading(false);
   }
 
   return (
@@ -137,7 +170,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.INPUT}
             control={form.control}
-            name="emeergencyContactName"
+            name="emergencyContactName"
             label="Emergency Contact Name"
             placeholder="Gardian's Name"
           />
@@ -145,7 +178,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.PHONE_INPUT}
             control={form.control}
-            name="emmeergencyContactNumber"
+            name="emergencyContactNumber"
             label="Emergency Contact Number"
             placeholder="(555) 123-4567"
           />
@@ -206,7 +239,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.TEXTAREA}
             control={form.control}
-            name="alleriges"
+            name="allergies"
             label="Allergies if any"
             placeholder="Peanuts, Seafood, etc."
           />
@@ -214,7 +247,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.TEXTAREA}
             control={form.control}
-            name="currentMedications"
+            name="currentMedication"
             label="Current Medications if any"
             placeholder="Paracetamol, etc."
           />
@@ -297,23 +330,24 @@ const RegisterForm = ({ user }: { user: User }) => {
           fieldType={FormFieldType.CHECKBOX}
           control={form.control}
           name="treatmentConsent"
-          label="I consent to receive treatment"
+          label="I consent to receive treatment for my health condition."
         />
 
         <CustomFormField
           fieldType={FormFieldType.CHECKBOX}
           control={form.control}
           name="disclosureConsent"
-          label="I consent to disclose my information"
+          label="I consent to the use and disclosure of my health information for treatment purposes."
         />
 
         <CustomFormField
           fieldType={FormFieldType.CHECKBOX}
           control={form.control}
           name="privacyConsent"
-          label="I consent to the privacy policy"
+          label="I acknowledge that I have reviewed and agree to the privacy policy"
         />
-        <SubmitButton isLoading={isLoading}>Get Started</SubmitButton>
+
+        <SubmitButton isLoading={isLoading}>Submit and Continue</SubmitButton>
       </form>
     </Form>
   )
