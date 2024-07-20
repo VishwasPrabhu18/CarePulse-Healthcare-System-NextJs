@@ -1,14 +1,18 @@
 import PatientForm from '@/components/forms/PatientForm'
+import PasskeyModal from '@/components/PasskeyModal';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const Home = () => {
+const Home = ({ searchParams }: SearchParamProps) => {
+
+  const isAdmin = searchParams.admin === 'true';
+
   return (
     <div className='flex h-screen max-h-screen'>
 
-      {/* todo: OTP varification | Passkey model */}
+      {isAdmin && <PasskeyModal />}
 
-      <section className='remove-scrollbar container my-auto'>
+      <section className='remove-scrollbar container'>
         <div className='sub-container max-w-[496px]'>
           <Image
             src="/assets/icons/logo-full.svg"
@@ -20,8 +24,8 @@ const Home = () => {
 
           <PatientForm />
 
-          <div className='text-14-regular mt-20 flex justify-between'>
-            <p className='justify-end text-dark-600 xl:text-left'>&copy; {new Date().getFullYear()} CarePulse</p>
+          <div className='text-14-regular flex justify-between py-10'>
+            <p className='justify-end text-dark-600 xl:text-left'>&copy; 2024 CarePulse</p>
             <Link href="/?admin=true" className='text-gray-500'>Admin</Link>
           </div>
         </div>

@@ -71,7 +71,7 @@ const Success = async ({ params: { userId }, searchParams }: SearchParamProps) =
           </Link>
         </Button>
 
-        <p className='copyright'>&copy; {new Date().getFullYear()} CarePulse</p>
+        <p className='copyright'>&copy; 2024 CarePulse</p>
       </div>
     </div>
   )

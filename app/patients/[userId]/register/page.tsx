@@ -20,7 +20,7 @@ const Register = async ({ params: { userId } }: SearchParamProps) => {
 
           <RegisterForm user={user} />
 
-          <p className='copyright py-12'>&copy; {new Date().getFullYear()} CarePulse</p>
+          <p className='copyright py-12'>&copy; 2024 CarePulse</p>
 
         </div>
       </section>
